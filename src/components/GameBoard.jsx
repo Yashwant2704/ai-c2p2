@@ -97,7 +97,7 @@ const GameBoard = () => {
 
   return (
     <div className="game-container">
-      <h1>🃏 Bridge AI Game</h1>
+      <h1>🃏 Bridge AI Game 🃏</h1>
 
       <div className="scoreboard">
         <p>👤 Player Score: {score.player}</p>
