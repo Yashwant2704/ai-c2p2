@@ -1,0 +1,7 @@
+.hand {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px;
+  }
+  

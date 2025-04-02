@@ -1,0 +1,164 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #282c34;
+    color: white;
+    text-align: center;
+  }
+  
+  .game-container {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .scoreboard {
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+  }
+  
+  /* AI & Player Card Styles */
+  .card {
+    width: 60px;
+    height: 80px;
+    background: white;
+    color: black;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 2px 4px 10px rgba(255, 255, 255, 0.2);
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 4px 6px 14px rgba(255, 255, 255, 0.3);
+  }
+  
+  .card.selected {
+    border: 2px solid #ffcc00;
+    transform: scale(1.1);
+  }
+  
+  .card.winning-card {
+    border: 3px solid lime;
+  }
+  
+  /* Player & AI Hands */
+  .player-hand, .ai-hand {
+    margin: 20px 0;
+  }
+  
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  /* Game Over Message */
+  .game-over {
+    margin-top: 20px;
+    font-size: 1.4em;
+  }
+  
+  .game-over h2 {
+    color: yellow;
+  }
+  
+  button {
+    padding: 10px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background: yellow;
+    color: black;
+  }
+  
+  button:hover {
+    background: orange;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 500px) {
+    .card {
+      width: 50px;
+      height: 70px;
+      font-size: 1.2em;
+    }
+  }
+  .card {
+    display: inline-block;
+    width: 60px;
+    height: 90px;
+    font-size: 24px;
+    text-align: center;
+    line-height: 90px;
+    border: 2px solid black;
+    margin: 5px;
+    border-radius: 8px;
+    transition: transform 0.2s ease-in-out;
+    cursor: pointer;
+  }
+  
+  .card:hover {
+    transform: scale(1.1);
+  }
+  
+  .winning-card {
+    border: 4px solid green;
+    background-color: lightyellow;
+  }
+  
+  .selected {
+    border: 4px solid blue;
+  }
+  
+  .game-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .back-card {
+    background: linear-gradient(45deg, darkred, black);
+    border: 2px solid white;
+    color: transparent;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 4px 10px rgba(255, 255, 255, 0.2);
+}
+  
+.back-card::before {
+    content: "★";
+    color: white;
+    font-size: 2em;
+    position: absolute;
+    font-weight: bold;
+    opacity: 0.6;
+}
+
+  .current-trick {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px;
+  }
+  
+  .no-hover:hover {
+    pointer-events: none;
+    cursor: default;
+    transform: scale(0.9);
+    box-shadow: none;
+    background: transparent;
+  }
