@@ -48,6 +48,7 @@ const GameBoard = () => {
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState("");
   const [winningCard, setWinningCard] = useState(null);
+  const [tricksPlayed, setTricksPlayed] = useState(0);
 
   useEffect(() => {
     setPlayerHand(deck.slice(0, 13)); // First 13 cards to player
@@ -55,7 +56,7 @@ const GameBoard = () => {
   }, [deck]);
 
   const handlePlayerMove = (card) => {
-    if (gameOver) return;
+    if (gameOver || currentTrick.player) return; // Prevent clicking when round is ongoing or game over
 
     setCurrentTrick((prev) => ({ ...prev, player: card }));
     setPlayerHand((prev) => prev.filter((c) => c !== card));
@@ -70,9 +71,15 @@ const GameBoard = () => {
         setWinningCard(trickWinner === "Player" ? card : aiMove);
 
         setScore((prev) => {
-          const newScore = { ...prev, [trickWinner.toLowerCase()]: prev[trickWinner.toLowerCase()] + 1 };
+          const newScore = { ...prev };
+          if (trickWinner !== "Draw") {
+            newScore[trickWinner.toLowerCase()] += 1;
+          }
 
-          if (newScore.player + newScore.ai === 13) {
+          const totalTricks = tricksPlayed + 1;
+          setTricksPlayed(totalTricks);
+
+          if (totalTricks === 13) {
             setGameOver(true);
             setWinner(newScore.player > newScore.ai ? "🎉 You Win! 🎉" : "😢 AI Wins! 😢");
           }
@@ -83,7 +90,7 @@ const GameBoard = () => {
         setTimeout(() => {
           setWinningCard(null);
           setCurrentTrick({ player: null, ai: null });
-        }, 1500);
+        }, 1200);
       }, 1000);
     }, 1000);
   };
@@ -116,10 +123,10 @@ const GameBoard = () => {
 
           {/* Center: Player and AI Selected Cards */}
           <div className="current-trick">
-            <div className={`card ${winningCard === currentTrick.player ? "winning-card" : ""}`}>
+            <div className={`card fade-in ${winningCard === currentTrick.player ? "winning-card" : ""}`}>
               {currentTrick.player ? `${currentTrick.player.rank} ${currentTrick.player.suit}` : ""}
             </div>
-            <div className={`card ${winningCard === currentTrick.ai ? "winning-card" : ""}`}>
+            <div className={`card fade-in ${winningCard === currentTrick.ai ? "winning-card" : ""}`}>
               {currentTrick.ai ? `${currentTrick.ai.rank} ${currentTrick.ai.suit}` : ""}
             </div>
           </div>
