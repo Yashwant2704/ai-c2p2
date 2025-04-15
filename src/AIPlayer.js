@@ -55,28 +55,47 @@ export function minimax(cards, depth, isMaximizing, alpha, beta) {
   }
 
   export function getBestMove(aiHand, playerCard) {
+    const rankValue = {
+      A: 14, K: 13, Q: 12, J: 11,
+      "10": 10, "9": 9, "8": 8, "7": 7,
+      "6": 6, "5": 5, "4": 4, "3": 3, "2": 2
+    };
+  
     if (!playerCard) {
-      return minimax(aiHand, 3, true, -Infinity, Infinity); // If AI starts, use Minimax
+      // AI starts first — just pick the best card using evaluation (e.g., minimax)
+      return aiHand.reduce((best, card) =>
+        rankValue[card.rank] > rankValue[best.rank] ? card : best
+      );
     }
   
-    const sameSuitCards = aiHand.filter(card => card.suit === playerCard.suit);
+    // Find all cards of the same suit
+    const matchingSuit = aiHand.filter(card => card.suit === playerCard.suit);
   
-    if (sameSuitCards.length > 0) {
-      // AI has a matching suit
-      const winningCards = sameSuitCards.filter(card => rankValue[card.rank] > rankValue[playerCard.rank]);
+    if (matchingSuit.length > 0) {
+      // Follow suit — play lowest winning card if possible, else lowest same-suit card
+      const winningOptions = matchingSuit.filter(card =>
+        rankValue[card.rank] > rankValue[playerCard.rank]
+      );
   
-      if (winningCards.length > 0) {
-        // Play the **lowest** card that still wins
-        return winningCards.reduce((best, card) => (rankValue[card.rank] < rankValue[best.rank] ? card : best));
+      if (winningOptions.length > 0) {
+        // Play lowest winning card
+        return winningOptions.reduce((best, card) =>
+          rankValue[card.rank] < rankValue[best.rank] ? card : best
+        );
       }
   
-      // No winning cards, play the highest in the same suit (reduce player's options)
-      return sameSuitCards.reduce((worst, card) => (rankValue[card.rank] > rankValue[worst.rank] ? card : worst));
+      // No winning option — play lowest same-suit card
+      return matchingSuit.reduce((worst, card) =>
+        rankValue[card.rank] < rankValue[worst.rank] ? card : worst
+      );
     }
   
-    // AI doesn't have the same suit → discard highest non-winning card
-    return aiHand.reduce((best, card) => (rankValue[card.rank] > rankValue[best.rank] ? card : best));
+    // No matching suit — discard lowest card
+    return aiHand.reduce((worst, card) =>
+      rankValue[card.rank] < rankValue[worst.rank] ? card : worst
+    );
   }
+  
   
   
   function evaluateHand(cards) {

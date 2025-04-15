@@ -9,30 +9,35 @@ const determineWinner = (playerCard, aiCard) => {
     "J": 11, "Q": 12, "K": 13, "A": 14
   };
 
-  if (rankOrder[playerCard.rank] > rankOrder[aiCard.rank]) {
-    return "Player";
-  } else if (rankOrder[playerCard.rank] < rankOrder[aiCard.rank]) {
-    return "AI";
-  } else {
-    return "Draw";
+  const ledSuit = aiCard ? aiCard.suit : playerCard.suit;
+
+  const playerFollowsSuit = playerCard.suit === ledSuit;
+  const aiFollowsSuit = aiCard.suit === ledSuit;
+
+  // Both follow suit → compare ranks
+  if (playerFollowsSuit && aiFollowsSuit) {
+    return rankOrder[playerCard.rank] > rankOrder[aiCard.rank] ? "Player" : "AI";
   }
+
+  // Only player follows suit
+  if (playerFollowsSuit) return "Player";
+
+  // Only AI follows suit
+  if (aiFollowsSuit) return "AI";
+
+  // Neither follow suit (shouldn't happen, fallback)
+  return "Draw";
 };
 
-// Function to generate a deck of 52 cards
+
+// Function to generate a shuffled deck
 const generateDeck = () => {
   const suits = ["♠️", "♥️", "♦️", "♣️"];
   const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-  let deck = [];
+  const deck = suits.flatMap(suit => ranks.map(rank => ({ rank, suit })));
 
-  for (let suit of suits) {
-    for (let rank of ranks) {
-      deck.push({ rank, suit });
-    }
-  }
-
-  // Shuffle the deck
   for (let i = deck.length - 1; i > 0; i--) {
-    let j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
@@ -48,52 +53,89 @@ const GameBoard = () => {
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState("");
   const [winningCard, setWinningCard] = useState(null);
-  const [tricksPlayed, setTricksPlayed] = useState(0);
+  const [nextPlayer, setNextPlayer] = useState("Player");
 
+  // Deal hands
   useEffect(() => {
-    setPlayerHand(deck.slice(0, 13)); // First 13 cards to player
-    setAiHand(deck.slice(13, 26)); // Next 13 cards to AI
+    setPlayerHand(deck.slice(0, 13));
+    setAiHand(deck.slice(13, 26));
   }, [deck]);
 
-  const handlePlayerMove = (card) => {
-    if (gameOver || currentTrick.player) return; // Prevent clicking when round is ongoing or game over
-
-    setCurrentTrick((prev) => ({ ...prev, player: card }));
-    setPlayerHand((prev) => prev.filter((c) => c !== card));
-
-    setTimeout(() => {
-      let aiMove = getBestMove(aiHand, card);
-      setCurrentTrick((prev) => ({ ...prev, ai: aiMove }));
-      setAiHand((prev) => prev.filter((c) => c !== aiMove));
-
+  // AI plays first if it won previous round
+  useEffect(() => {
+    if (
+      !gameOver &&
+      nextPlayer === "AI" &&
+      !currentTrick.ai &&
+      !currentTrick.player &&
+      aiHand.length > 0
+    ) {
       setTimeout(() => {
-        const trickWinner = determineWinner(card, aiMove);
-        setWinningCard(trickWinner === "Player" ? card : aiMove);
+        const aiCard = getBestMove(aiHand, null);
+        setCurrentTrick(prev => ({ ...prev, ai: aiCard }));
+        setAiHand(prev => prev.filter(card => card !== aiCard));
+      }, 1000);
+    }
+  }, [nextPlayer, currentTrick, aiHand, gameOver]);
 
-        setScore((prev) => {
+  // Player plays
+  const handlePlayerMove = (card) => {
+    if (
+      gameOver ||
+      currentTrick.player ||
+      (nextPlayer === "AI" && !currentTrick.ai)
+    ) return;
+  
+    const aiCard = currentTrick.ai;
+  
+    // 🛑 ENFORCE PLAYER FOLLOWS SUIT
+    if (aiCard) {
+      const sameSuitCards = playerHand.filter(c => c.suit === aiCard.suit);
+      const isFollowingSuit = card.suit === aiCard.suit;
+  
+      if (sameSuitCards.length > 0 && !isFollowingSuit) {
+        alert(`You must follow suit: ${aiCard.suit}`);
+        return;
+      }
+    }
+  
+    setCurrentTrick(prev => ({ ...prev, player: card }));
+    setPlayerHand(prev => prev.filter(c => c !== card));
+  
+    setTimeout(() => {
+      const aiMove = aiCard || getBestMove(aiHand, card);
+      if (!aiCard) {
+        setCurrentTrick(prev => ({ ...prev, ai: aiMove }));
+        setAiHand(prev => prev.filter(c => c !== aiMove));
+      }
+  
+      setTimeout(() => {
+        const trickWinner = determineWinner(card, aiCard || aiMove);
+        setWinningCard(trickWinner === "Player" ? card : (aiCard || aiMove));
+  
+        setScore(prev => {
           const newScore = { ...prev };
           if (trickWinner !== "Draw") {
             newScore[trickWinner.toLowerCase()] += 1;
           }
-
-          const totalTricks = tricksPlayed + 1;
-          setTricksPlayed(totalTricks);
-
-          if (totalTricks === 13) {
+  
+          if (newScore.player + newScore.ai === 13) {
             setGameOver(true);
             setWinner(newScore.player > newScore.ai ? "🎉 You Win! 🎉" : "😢 AI Wins! 😢");
           }
-
+  
           return newScore;
         });
-
+  
         setTimeout(() => {
           setWinningCard(null);
           setCurrentTrick({ player: null, ai: null });
-        }, 1200);
+          setNextPlayer(trickWinner);
+        }, 1000);
       }, 1000);
     }, 1000);
   };
+  
 
   return (
     <div className="game-container">
@@ -115,13 +157,13 @@ const GameBoard = () => {
           <div className="ai-hand">
             <h3>🤖 AI Hand</h3>
             <div className="cards">
-              {aiHand.map((_, index) => (
-                <div key={index} className="card back-card no-hover"></div>
+              {aiHand.map((_, i) => (
+                <div key={i} className="card back-card no-hover"></div>
               ))}
             </div>
           </div>
 
-          {/* Center: Player and AI Selected Cards */}
+          {/* Current Trick */}
           <div className="current-trick">
             <div className={`card fade-in ${winningCard === currentTrick.player ? "winning-card" : ""}`}>
               {currentTrick.player ? `${currentTrick.player.rank} ${currentTrick.player.suit}` : ""}
@@ -135,9 +177,9 @@ const GameBoard = () => {
           <div className="player-hand">
             <h3>👤 Your Hand</h3>
             <div className="cards">
-              {playerHand.map((card, index) => (
+              {playerHand.map((card, i) => (
                 <div
-                  key={index}
+                  key={i}
                   className={`card ${currentTrick.player === card ? "selected" : ""} ${winningCard === card ? "winning-card" : ""}`}
                   onClick={() => handlePlayerMove(card)}
                 >
